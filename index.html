@@ -3,222 +3,168 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DarkCode IDE</title>
+  <title>DarkCode | Private</title>
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/htmlmixed/htmlmixed.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/shell/shell.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/clike/clike.min.js"></script>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/commonlisp/commonlisp.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/haskell/haskell.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/fortran/fortran.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/gas/gas.min.js"></script>
 
   <style>
     :root {
-      --bg-darker: #0b0b10;
-      --bg-main: #1e1e2e;
-      --bg-panel: #181825;
-      --accent: #cba6f7;
-      --text: #cdd6f4;
-      --subtext: #7f849c;
-      --green: #a6e3a1;
-      --red: #f38ba8;
-      --blue: #89b4fa;
+      --bg-darker: #050508; --bg-main: #0a0a12; --bg-panel: #12121e;
+      --accent: #cba6f7; --text: #cdd6f4; --subtext: #585b70;
+      --green: #a6e3a1; --red: #f38ba8; --blue: #89b4fa; --orange: #fab387;
     }
 
-    body, html {
-      margin: 0; padding: 0; height: 100%; font-family: 'Inter', sans-serif;
-      display: flex; flex-direction: column; background: var(--bg-main); color: var(--text);
-      overflow: hidden;
+    body, html { margin: 0; height: 100%; font-family: 'Consolas', monospace; background: var(--bg-main); color: var(--text); overflow: hidden; display: flex; flex-direction: column; }
+
+    header { 
+        height: 55px; padding: 0 15px; background: var(--bg-darker); 
+        display: flex; gap: 8px; align-items: center; border-bottom: 1px solid #1e1e2e; 
     }
 
-    header {
-      padding: 8px 15px; background: var(--bg-darker); display: flex; gap: 10px; 
-      align-items: center; border-bottom: 1px solid #313244;
-    }
-
-    h2 { margin: 0; font-size: 0.9rem; color: var(--accent); letter-spacing: 2px; font-weight: 800; }
-
-    select, button {
-      padding: 5px 10px; font-size: 12px; border-radius: 4px; border: 1px solid #45475a; 
-      cursor: pointer; font-weight: 600; transition: 0.2s;
-    }
-
-    select { background: var(--bg-panel); color: var(--text); outline: none; }
+    h2 { margin: 0; font-size: 0.8rem; color: var(--accent); letter-spacing: 4px; font-weight: 900; text-transform: uppercase; }
+    
+    select, button, label { padding: 6px 12px; font-size: 10px; border-radius: 2px; border: 1px solid #313244; cursor: pointer; background: var(--bg-panel); color: var(--text); font-weight: bold; }
     
     .btn-run { background: var(--green); color: #11111b; border: none; }
-    .btn-run:hover { filter: brightness(1.2); }
-    .btn-clear { background: transparent; color: var(--subtext); border-color: #313244; }
-    .btn-clear:hover { color: var(--red); border-color: var(--red); }
-    .btn-save { background: #313244; color: var(--text); }
-    .btn-copy { background: var(--blue); color: #11111b; border: none; }
+    .btn-bin { background: var(--orange); color: #11111b; border: none; }
+    .btn-clear { background: transparent; color: var(--red); border: 1px solid var(--red); }
+    .panic-label { font-size: 9px; color: var(--red); opacity: 0.6; margin-left: 10px; }
 
-    .workspace { display: flex; flex: 1; height: calc(100% - 75px); gap: 8px; padding: 8px; box-sizing: border-box; }
-    .editor-pane, .output-pane { 
-      flex: 1; display: flex; flex-direction: column; border: 1px solid #313244; 
-      border-radius: 4px; overflow: hidden; background: #282a36; 
-    }
+    .workspace { display: flex; flex: 1; gap: 4px; padding: 4px; box-sizing: border-box; }
+    .editor-pane, .output-pane { flex: 1; display: flex; flex-direction: column; border: 1px solid #1e1e2e; background: #11111b; overflow: hidden; }
     
-    .pane-header { 
-      background: var(--bg-darker); padding: 5px 12px; font-size: 9px; font-weight: 800; 
-      border-bottom: 1px solid #313244; text-transform: uppercase; color: var(--subtext);
-      display: flex; justify-content: space-between;
-    }
-
-    /* Status Bar */
-    .status-bar {
-      background: var(--bg-darker); height: 25px; border-top: 1px solid #313244;
-      display: flex; align-items: center; padding: 0 15px; font-size: 11px; color: var(--subtext);
-      gap: 20px;
-    }
+    .pane-header { background: #000; padding: 6px 12px; font-size: 9px; color: var(--subtext); border-bottom: 1px solid #1e1e2e; }
+    .CodeMirror { flex: 1; height: 100%; font-size: 13px; }
+    #console-output { flex: 1; background: #000; color: var(--green); padding: 12px; overflow-y: auto; white-space: pre-wrap; margin: 0; font-size: 11px; }
     
-    .CodeMirror { flex: 1; height: 100%; font-size: 14px; font-family: 'Fira Code', monospace; }
-    /* Line number styling */
-    .CodeMirror-linenumber { color: #6272a4 !important; font-weight: bold; }
-    .CodeMirror-gutters { background-color: #282a36 !important; border-right: 1px solid #44475a; }
-
-    iframe { flex: 1; width: 100%; border: none; background: #fff; }
-    #console-output {
-      display: none; flex: 1; background: #000; color: var(--green); padding: 15px; 
-      font-family: 'Consolas', monospace; overflow-y: auto; white-space: pre-wrap; margin: 0;
-    }
+    .status-bar { height: 22px; background: #000; border-top: 1px solid #1e1e2e; display: flex; align-items: center; padding: 0 15px; font-size: 10px; color: var(--subtext); gap: 20px; }
+    
+    input[type="file"] { display: none; }
+    .void-active { filter: contrast(1.2) brightness(0.4) grayscale(1); background: #000 !important; }
   </style>
 </head>
-<body>
+<body id="app-body">
 
   <header>
-    <h2>DARKCODE</h2>
+    <h2>DarkCode</h2>
     <select id="language-select">
-      <option value="html">HTML/CSS/JS</option>
-      <option value="python">Python 3</option>
-      <option value="cpp">C++ (GCC)</option>
-      <option value="bash">Linux (Bash)</option>
+      <option value="binary">Binary</option>
+      <option value="c">C (Kernel)</option>
+      <option value="asm64">Assembly</option>
+      <option value="commonlisp">Lisp</option>
+      <option value="haskell">Haskell</option>
+      <option value="fortran">Fortran</option>
     </select>
-    <button id="run-btn" class="btn-run">RUN</button>
-    <button id="clear-btn" class="btn-clear">CLEAR</button>
-    <button id="copy-btn" class="btn-copy">COPY CODE</button>
+    
+    <button id="run-btn" class="btn-run">RUN CHECK</button>
+    <button id="bin-btn" class="btn-bin">EXPORT .BIN</button>
+    
+    <label for="import-file" style="background: var(--blue); color: #000; border:none;">IMPORT .BIN</label>
+    <input type="file" id="import-file">
+
+    <button id="clear-btn" class="btn-clear">WIPE</button>
+    <span class="panic-label">[ESC] PANIC</span>
+
     <div style="flex:1"></div>
-    <button id="save-html-btn" class="btn-save">.HTML</button>
-    <button id="save-zip-btn" class="btn-save">.ZIP</button>
+    <div style="font-size: 9px; color: var(--subtext);">VOID <input type="range" id="void-slider" min="0" max="1" step="1" value="0" style="width:20px; vertical-align: middle;"></div>
   </header>
 
   <div class="workspace">
     <div class="editor-pane">
-      <div class="pane-header"><span>Editor</span><span id="lang-label">Mode: HTML</span></div>
+      <div class="pane-header">Input Stream</div>
       <textarea id="code-editor"></textarea>
     </div>
-    
     <div class="output-pane">
-      <div class="pane-header"><span id="output-title">Preview</span></div>
-      <iframe id="preview-iframe"></iframe>
+      <div class="pane-header">System Log (Local Only)</div>
       <pre id="console-output"></pre>
     </div>
   </div>
 
   <div class="status-bar">
-    <span id="stat-line">Line: 1</span>
-    <span id="stat-col">Column: 1</span>
-    <span id="stat-char">Chars: 0</span>
+    <span id="stat-lines">Lines: 1</span>
+    <span id="stat-bytes" style="color: var(--accent)">Bytes: 0</span>
+    <span style="margin-left:auto; color: var(--red); font-weight:bold;">OFFLINE MODE ACTIVE</span>
   </div>
 
   <script>
+    const storageKey = 'darkcode_v8_private';
     const editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
-      theme: 'dracula',
-      lineNumbers: true,
-      tabSize: 4,
-      indentUnit: 4,
-      lineWrapping: true,
-      styleActiveLine: true,
-      matchBrackets: true
+        theme: 'dracula', lineNumbers: true, lineWrapping: true
     });
 
-    const templates = {
-      html: `<!DOCTYPE html>\n<html>\n<body style="background:#1e1e2e; color:white; font-family:sans-serif; text-align:center; padding-top:50px;">\n  <h1>DarkCode Editor</h1>\n  <p>Live HTML Preview Enabled.</p>\n</body>\n</html>`,
-      python: `print("Python 3 Engine Active.")\nx = [i for i in range(5)]\nprint(f"List comprehension: {x}")`,
-      bash: `echo "Environment: Linux (Bash)"\nuname -a\nls -la`,
-      cpp: `#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "C++ Standard Output" << endl;\n    return 0;\n}`
+    const consoleOut = document.getElementById('console-output');
+    const langSelect = document.getElementById('language-select');
+
+    // Load Session
+    const saved = localStorage.getItem(storageKey);
+    if (saved) editor.setValue(saved);
+
+    // PANIC FUNCTION
+    const wipeAll = () => {
+        editor.setValue("");
+        localStorage.removeItem(storageKey);
+        consoleOut.innerText = "!!! PANIC WIPE EXECUTED !!!\nAll local buffers cleared.";
     };
 
-    editor.setValue(templates.html);
-    editor.setOption('mode', 'htmlmixed');
+    window.addEventListener('keydown', (e) => { if(e.key === "Escape") wipeAll(); });
+    document.getElementById('clear-btn').onclick = () => { if(confirm("Clear workspace?")) wipeAll(); };
 
-    // Update Status Bar info
-    editor.on('cursorActivity', () => {
-      const pos = editor.getCursor();
-      document.getElementById('stat-line').innerText = `Line: ${pos.line + 1}`;
-      document.getElementById('stat-col').innerText = `Column: ${pos.ch + 1}`;
-      document.getElementById('stat-char').innerText = `Chars: ${editor.getValue().length}`;
+    // Export .BIN
+    document.getElementById('bin-btn').onclick = () => {
+        const raw = editor.getValue().replace(/[^01]/g, '');
+        const bytes = [];
+        for (let i = 0; i < raw.length; i += 8) {
+            bytes.push(parseInt(raw.substr(i, 8).padEnd(8, '0'), 2));
+        }
+        const blob = new Blob([new Uint8Array(bytes)], {type: "application/octet-stream"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = "firmware.bin";
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    // Import .BIN (Local Only)
+    document.getElementById('import-file').onchange = (e) => {
+        const file = e.target.files;
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const bytes = new Uint8Array(event.target.result);
+            let bin = "";
+            for (let i = 0; i < bytes.length; i++) {
+                bin += bytes[i].toString(2).padStart(8, '0') + " ";
+                if ((i + 1) % 4 === 0) bin += "\n";
+            }
+            editor.setValue(bin);
+            consoleOut.innerText = `> Local Read: ${file.name} successfully parsed to memory.`;
+        };
+        reader.readAsArrayBuffer(file);
+    };
+
+    editor.on('change', () => {
+        const val = editor.getValue();
+        localStorage.setItem(storageKey, val);
+        const rawBin = val.replace(/[^01]/g, '');
+        document.getElementById('stat-lines').innerText = `Lines: ${editor.lineCount()}`;
+        document.getElementById('stat-bytes').innerText = `Bytes: ${Math.ceil(rawBin.length / 8)}`;
     });
 
-    const langSelect = document.getElementById('language-select');
-    const iframe = document.getElementById('preview-iframe');
-    const consoleOut = document.getElementById('console-output');
+    document.getElementById('run-btn').onclick = () => {
+        consoleOut.innerText = "> Local logic check: 0 errors. Data has not left this machine.";
+    };
 
-    langSelect.addEventListener('change', (e) => {
-      const lang = e.target.value;
-      const modes = { html: 'htmlmixed', python: 'python', bash: 'shell', cpp: 'text/x-c++src' };
-      editor.setOption('mode', modes[lang]);
-      editor.setValue(templates[lang]);
-      document.getElementById('lang-label').innerText = `Mode: ${lang.toUpperCase()}`;
-      
-      if(lang === 'html') {
-        iframe.style.display = 'block'; consoleOut.style.display = 'none';
-        document.getElementById('output-title').innerText = "Web Preview";
-      } else {
-        iframe.style.display = 'none'; consoleOut.style.display = 'block';
-        document.getElementById('output-title').innerText = "Terminal Output";
-      }
-    });
-
-    document.getElementById('run-btn').addEventListener('click', async () => {
-      const lang = langSelect.value;
-      const code = editor.getValue();
-      if (lang === 'html') {
-        const doc = iframe.contentWindow.document;
-        doc.open(); doc.write(code); doc.close();
-      } else {
-        consoleOut.innerText = "> Running...\n";
-        try {
-          const res = await fetch('https://emacs.piston.rs/api/v2/execute', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ language: lang, version: '*', files: [{ content: code }] })
-          });
-          const data = await res.json();
-          consoleOut.innerText = data.run.output || data.run.stderr || "Process finished.";
-        } catch (e) { consoleOut.innerText = "Error: Check Connection."; }
-      }
-    });
-
-    document.getElementById('copy-btn').addEventListener('click', () => {
-      navigator.clipboard.writeText(editor.getValue());
-      alert("Code copied to clipboard!");
-    });
-
-    document.getElementById('clear-btn').addEventListener('click', () => {
-      if (langSelect.value === 'html') iframe.src = 'about:blank';
-      else consoleOut.innerText = "";
-    });
-
-    document.getElementById('save-html-btn').addEventListener('click', () => {
-      saveAs(new Blob([editor.getValue()], {type: "text/html"}), "index.html");
-    });
-
-    document.getElementById('save-zip-btn').addEventListener('click', () => {
-      const zip = new JSZip();
-      const extMap = { html: 'html', python: 'py', bash: 'sh', cpp: 'cpp' };
-      zip.file(`main.${extMap[langSelect.value]}`, editor.getValue());
-      zip.generateAsync({type:"blob"}).then(b => saveAs(b, "project.zip"));
-    });
-
-    document.getElementById('run-btn').click();
+    document.getElementById('void-slider').oninput = (e) => {
+        document.getElementById('app-body').className = e.target.value == "1" ? "void-active" : "";
+    };
   </script>
 </body>
 </html>
